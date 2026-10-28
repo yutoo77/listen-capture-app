@@ -86,7 +86,7 @@ flowchart LR
 | 本人の短いローカル操作（2026-10-27） | 日本語音声の聴取、実マイク録音・試聴、再読み込み後の録音と元位置への復帰 |
 | 非公開 AWS（2026-10-28） | 公開版と同一のアプリ内容の image で HTTPS・実 VOICEVOX・合成マイク録音・振り返り、CSRF・所有者分離。実マイク・本人聴感の確認はローカルのみ |
 | Backup / Restore（同 AWS 検証） | 更新前後の DB / media を暗号化退避し、別のローカル PostgreSQL 17・保存先へ独立復元。終了後は AWS の停止を確認 |
-| GitHub Actions | CI 定義を同梱。新規 Private への初回 push では Actions を無効化し、新規 run は未実施。[実行状況](https://github.com/yutoo77/listen-capture-app/actions)を参照。過去の CI 成功を今回へ流用しない |
+| GitHub Actions（2026-10-28） | 公開リポジトリでの初回実行の失敗後、CI 用 DB role のパスワード長を修正。commit `70366c9` の [Quality and core experience #2](https://github.com/yutoo77/listen-capture-app/actions/runs/40629508653) が成功しました。以後の実行状況は [Actions](https://github.com/yutoo77/listen-capture-app/actions) を参照してください。CI の成功と、実マイク・実音声・AWS での確認は別の検証として扱います |
 
 失敗・修正・skip と測定条件、公開するアプリ内容と過去の配置・検証結果の対応は [検証記録](docs/verification.md) にまとめています。新しい Git 履歴を作ったこと自体を、実動作試験の再実施とは扱いません。
 
