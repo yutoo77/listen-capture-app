@@ -1,0 +1,34 @@
+{
+  "name": "listen-capture-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "preview": "vite preview --host 127.0.0.1",
+    "format:check": "prettier --check src vite.config.ts eslint.config.js tsconfig.json index.html"
+  },
+  "dependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.1.2",
+    "eslint": "10.13.0",
+    "fake-indexeddb": "6.2.4",
+    "globals": "17.4.0",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.62.0",
+    "vite": "8.3.4",
+    "vitest": "5.0.5"
+  }
+}

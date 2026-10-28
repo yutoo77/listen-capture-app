@@ -1,0 +1,106 @@
+name: listen-capture-portfolio
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-listen_capture}
+      POSTGRES_USER: ${POSTGRES_USER:-listen_capture}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run python scripts/setup-env.py first}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  backend:
+    image: ${LC_BACKEND_IMAGE:-listen-capture-portfolio-api:local}
+    build:
+      context: .
+      dockerfile: infra/backend.Dockerfile
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      PRIVATE_MEDIA_ROOT: /app/private-media
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - private_media:/app/private-media
+    init: true
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 20
+    restart: unless-stopped
+  audio-worker:
+    image: ${LC_BACKEND_IMAGE:-listen-capture-portfolio-api:local}
+    # Backend builds the shared image once; parallel exports race on this tag.
+    pull_policy: never
+    command: [python, manage.py, audio_worker, --poll-seconds, '2']
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      PRIVATE_MEDIA_ROOT: /app/private-media
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - private_media:/app/private-media
+    init: true
+    restart: unless-stopped
+  pdf-worker:
+    image: ${LC_BACKEND_IMAGE:-listen-capture-portfolio-api:local}
+    pull_policy: never
+    command: [python, manage.py, pdf_worker, --poll-seconds, '2']
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      PRIVATE_MEDIA_ROOT: /app/private-media
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - private_media:/app/private-media
+    init: true
+    restart: unless-stopped
+  narration-worker:
+    image: ${LC_BACKEND_IMAGE:-listen-capture-portfolio-api:local}
+    pull_policy: never
+    command: [python, manage.py, narration_worker, --poll-seconds, '2']
+    env_file: .env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: '5432'
+      PRIVATE_MEDIA_ROOT: /app/private-media
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - private_media:/app/private-media
+    init: true
+    restart: unless-stopped
+  web:
+    image: ${LC_WEB_IMAGE:-listen-capture-portfolio-web:local}
+    build:
+      context: .
+      dockerfile: infra/web.Dockerfile
+    ports:
+      - 127.0.0.1:8080:80
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, 'http://127.0.0.1/api/health/']
+      interval: 5s
+      timeout: 4s
+      retries: 20
+    restart: unless-stopped
+volumes:
+  postgres_data:
+  private_media:

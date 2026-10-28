@@ -1,0 +1,5 @@
+# Only needed to seed disposable E2E users from the CI runner.
+services:
+  db:
+    ports:
+      - 127.0.0.1:54329:5432

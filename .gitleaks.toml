@@ -1,0 +1,20 @@
+title = "Listen Capture publication audit"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Python storage-key access and max-bytes expression, not a literal credential; exact file and full line only."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''(?:^|/)backend/capture/tests/test_playlist\.py$''']
+regexes = ['''^\s*audio\.segments\.first\(\)\.storage_key, max_bytes=9600044\s*$''']
+
+[[allowlists]]
+description = "Python storage-key access and max-bytes expression, not a literal credential; exact file and full line only."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''(?:^|/)scripts/recovery\-drill\.py$''']
+regexes = ['''^\s*compressed_segment\.storage_key, max_bytes=compressed_segment\.size_bytes\s*$''']

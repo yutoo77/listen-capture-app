@@ -1,0 +1,116 @@
+name: Quality and core experience
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run lint && npm run format:check && npm run typecheck && npm test && npm run build
+        working-directory: frontend
+  backend-and-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: portfolio_ci
+          POSTGRES_DB: portfolio_ci
+          POSTGRES_PASSWORD: ci-only-${{ github.run_id }}-${{ github.run_attempt }}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U portfolio_ci -d portfolio_ci"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: '5432'
+      POSTGRES_USER: portfolio_ci
+      POSTGRES_DB: portfolio_ci
+      POSTGRES_PASSWORD: ci-only-${{ github.run_id }}-${{ github.run_attempt }}
+      DJANGO_DEBUG: '1'
+      AWS_EC2_METADATA_DISABLED: 'true'
+      PRIVATE_STORAGE_BACKEND: local
+      PRIVATE_S3_USE_APPROVED: '0'
+      POLLY_ENABLED: '0'
+      POLLY_BILLING_APPROVED: '0'
+      VOICEVOX_ENABLED: '0'
+      LC_LOCAL_WINDOWS_TTS: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements.lock
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+      - run: pip install -r backend/requirements.lock
+      - run: npm ci && npm ci --prefix frontend && npx playwright install --with-deps chromium
+      - name: Set up isolated local configuration and matching PostgreSQL tools
+        run: |
+          python scripts/setup-env.py
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          mkdir -p .local/pg-bin
+          for tool in pg_dump pg_restore; do
+            cat > ".local/pg-bin/$tool" <<'SH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          exec docker run --rm --network host --user "$(id -u):$(id -g)" \
+            -e PGPASSWORD --volume "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" \
+            --workdir "$GITHUB_WORKSPACE" postgres:17-bookworm "$(basename "$0")" "$@"
+          SH
+            chmod +x ".local/pg-bin/$tool"
+          done
+          echo "PG_BIN=$GITHUB_WORKSPACE/.local/pg-bin" >> "$GITHUB_ENV"
+      - run: ruff check backend scripts && ruff format --check backend scripts
+      - run: python -m unittest discover -s scripts -p 'test_*.py'
+      - run: node --test tests/test-login-pacing.mjs
+      - run: python scripts/manage.py makemigrations --check --dry-run
+      - run: python scripts/manage.py test capture --noinput
+      - name: Verify independent recovery using synthetic data only
+        run: |
+          python scripts/recovery-drill.py --confirm-disposable
+          python scripts/database-role-drill.py --confirm-disposable
+      - name: Exercise browser flows with disposable accounts and a synthetic microphone
+        run: python scripts/e2e-local.py
+      - name: Check Compose configuration without launching services
+        run: |
+          docker compose config --quiet
+          docker compose -f compose.yaml -f compose.voicevox.yaml --profile voicevox config --quiet
+      - name: Build and start the documented local Docker stack
+        id: docker_smoke
+        run: |
+          # The native test service has different credentials. Let BOTH Compose
+          # interpolation and backend env_file use the freshly generated .env.
+          unset POSTGRES_HOST POSTGRES_PORT POSTGRES_USER POSTGRES_DB POSTGRES_PASSWORD
+          docker compose -p lc-ci-smoke --env-file .env up --build -d --wait --wait-timeout 180
+          curl --fail --silent --show-error http://127.0.0.1:8080/api/health/
+          docker compose -p lc-ci-smoke --env-file .env exec -T backend python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE','config.settings'); import django; django.setup(); from django.conf import settings; assert not settings.POLLY_ENABLED; assert not settings.POLLY_BILLING_APPROVED; assert not settings.VOICEVOX_ENABLED; assert not settings.LC_E2E_FIXTURE_TTS; print('Local Docker baseline: providers and synthetic TTS disabled')"
+      - name: Remove only the disposable CI smoke stack
+        if: ${{ always() && steps.docker_smoke.outcome != 'skipped' }}
+        run: |
+          unset POSTGRES_HOST POSTGRES_PORT POSTGRES_USER POSTGRES_DB POSTGRES_PASSWORD
+          docker compose -p lc-ci-smoke --env-file .env down --volumes
+      # Do not upload traces, credentials, recordings, database dumps or local logs.

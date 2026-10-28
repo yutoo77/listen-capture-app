@@ -1,0 +1,8 @@
+{
+  "name": "listen-capture-checks",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": { "test:e2e": "playwright test", "test:e2e:seed": "python scripts/run-e2e.py" },
+  "devDependencies": { "@playwright/test": "1.62.1" }
+}
