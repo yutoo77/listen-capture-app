@@ -33,7 +33,7 @@ jobs:
         env:
           POSTGRES_USER: portfolio_ci
           POSTGRES_DB: portfolio_ci
-          POSTGRES_PASSWORD: ci-only-${{ github.run_id }}-${{ github.run_attempt }}
+          POSTGRES_PASSWORD: ci-only-test-password-${{ github.run_id }}-${{ github.run_attempt }}
         ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U portfolio_ci -d portfolio_ci"
@@ -43,7 +43,7 @@ jobs:
       POSTGRES_PORT: '5432'
       POSTGRES_USER: portfolio_ci
       POSTGRES_DB: portfolio_ci
-      POSTGRES_PASSWORD: ci-only-${{ github.run_id }}-${{ github.run_attempt }}
+      POSTGRES_PASSWORD: ci-only-test-password-${{ github.run_id }}-${{ github.run_attempt }}
       DJANGO_DEBUG: '1'
       AWS_EC2_METADATA_DISABLED: 'true'
       PRIVATE_STORAGE_BACKEND: local
