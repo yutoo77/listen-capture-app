@@ -1,0 +1,145 @@
+{
+  "checked_on": "2026-10-28",
+  "status": "pass",
+  "build_inputs": {
+    "count": 144,
+    "sha256": "72150a3e70dc9138dc8f2ae19e42c83eb9d0e19c84036a094430570635958550",
+    "unchanged_from_local_application_inputs": true
+  },
+  "deployment": {
+    "environment": "Existing non-public AWS environment",
+    "source": "Public candidate application images; external private operational configuration",
+    "backend_and_web_pinned_images": true,
+    "unpublished_application_code_injected": false,
+    "new_infrastructure": false,
+    "new_public_ingress": false,
+    "migration_latest_existing": "0011",
+    "migration_0010_existing": true,
+    "migration_0011_existing": true,
+    "pending_migrations": 0,
+    "new_migrations_applied": 0,
+    "image_manifest_digests": {
+      "backend": "sha256:4306c8a577e534fcf46ec14955e3a6fd626bd53d8a569622cf6e10b867d8b9d2",
+      "web": "sha256:e64520642b87014a00efd41d18679fd76c1a309904714b6f8b07546c4541e577"
+    },
+    "runtime_image_config_ids": {
+      "backend": "sha256:3858c71324ce037da1f14598a49b379204436924830bd3f97e290d9cb3cea37f",
+      "web": "sha256:470c997ba4715d1b70963b50f5af05a044ba9f36a2af2a5c8c35f1dba57d1081"
+    }
+  },
+  "browser": {
+    "real_engine": true,
+    "synthetic_microphone": true,
+    "human_listening": "not_run_in_AWS",
+    "human_microphone": "not_run_in_AWS",
+    "tls_verification": "enabled_without_certificate_error_exception",
+    "initial_partial_pass_steps": 5,
+    "continuation_pass_steps": 6,
+    "https_login_session": "pass",
+    "secure_httponly_cookie": "pass",
+    "missing_csrf_status": 403,
+    "missing_https_reference_status": 403,
+    "same_uuid_replay_status": 200,
+    "changed_profile_status": 409,
+    "synthetic_memo_save_status": 201,
+    "immediate_review_and_resume": "pass",
+    "reload_original_context": "pass",
+    "position_tolerance_ms": 150,
+    "anonymous_media_status": 403,
+    "other_owner_media_status": 404,
+    "page_errors": [],
+    "continuation_synthesis_repeated": false
+  },
+  "voicevox": {
+    "engine_version": "0.25.2",
+    "speaker_id": 14,
+    "pitch_scale": 0.03,
+    "credit": "VOICEVOX:冥鳴ひまり",
+    "sample_characters": 370,
+    "segments": 2,
+    "duration_ms": 64619,
+    "cancel_wait_ms": 40541,
+    "cancel_saved_segments": 1,
+    "same_job_explicit_resume": "pass",
+    "polly_enabled": false,
+    "fixture_enabled": false,
+    "measurement_scope": "Observed in this run only; not instant cancellation, an upper bound, a benchmark or an SLA"
+  },
+  "backup_restore": {
+    "quiesced_database_media_pairs": "pre_and_post",
+    "encrypted_independent_preservation_and_decryption_match": "pass",
+    "restore_target": "Fresh local PostgreSQL 17 and separate private media; not a rebuilt AWS host",
+    "source_database_or_media_overwritten": false,
+    "pre": {
+      "media_verified": 44,
+      "audio_decoded": 33,
+      "raw_pcm_frames_and_digest_verified": 11,
+      "memo_receipts_preserved": 10,
+      "receipt_digest_matches": 8,
+      "legacy_digest_reconstruction_skips": 2,
+      "owner_allowed": 62,
+      "other_owner_denied": 62,
+      "anonymous_denied": 62,
+      "restored_validation_unchanged_tables": 28
+    },
+    "post": {
+      "media_verified": 46,
+      "audio_decoded": 35,
+      "raw_pcm_frames_and_digest_verified": 11,
+      "memo_receipts_preserved": 11,
+      "receipt_digest_matches": 9,
+      "legacy_digest_reconstruction_skips": 2,
+      "owner_allowed": 67,
+      "other_owner_denied": 67,
+      "anonymous_denied": 67,
+      "restored_validation_unchanged_tables": 28
+    },
+    "preserved_existing_rows_in_targeted_tables": {
+      "audio_segments": 16,
+      "audio_versions": 8,
+      "document_versions": 9,
+      "memo_receipts": 10,
+      "narration_requests": 9,
+      "text_blocks": 31,
+      "voice_memos": 10
+    },
+    "post_cancel_0011_source_projection_matches": true,
+    "restored_authentication_scope": "Forced-auth runtime checks; real Session/CSRF/TLS/HTTP replay are covered by the separate AWS browser flow",
+    "fresh_local_restore_cluster_stopped": true
+  },
+  "shutdown": {
+    "status": "stopped_independently_confirmed",
+    "confirmed_stopped": true,
+    "start_window_utc": "2026-10-28T01:08:09.480415+00:00",
+    "stopped_observed_utc": "2026-10-28T02:10:19.259621+00:00",
+    "conservative_start_to_stopped_observation_seconds": 3729.779,
+    "maximum_user_approved_minutes": 120,
+    "guard_minutes": 110,
+    "stop_requests": 1,
+    "metadata_drift": [],
+    "all_containers_stopped_and_synced": true,
+    "watchdog_independent_stopped_readback": true,
+    "temporary_ca_removed_in_actual_user_context": true,
+    "billing_scope": "Observed operation window, not finalized AWS billing usage"
+  },
+  "remote_publication": {
+    "github_repository_created": false,
+    "pushed": false,
+    "public": false,
+    "new_github_actions_run": "not_run",
+    "recorded_scope": "Status at the 2026-10-28 AWS acceptance, not the current repository publication state."
+  },
+  "limitations": [
+    "Historical local human microphone/listening acceptance is not AWS human acceptance.",
+    "Two legacy memo receipts could not reconstruct their historical request digest and remain explicit skips.",
+    "No full AWS-host rebuild, arbitrary historical S3-version restore or continuous-operation RPO/RTO claim.",
+    "No private IDs, endpoints, credentials, user content, media or screenshots are included in this summary."
+  ],
+  "source_correspondence": "The listed 144 application build inputs match the distributed source and the dated local Docker record; no new execution is claimed for Initial Commit/history consolidation.",
+  "excluded_harness_executions": {
+    "status": "incomplete",
+    "counted_as_success": false,
+    "tls_or_csrf_protection_weakened": false,
+    "continuation_reused_completed_audio": true
+  }
+}

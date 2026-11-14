@@ -1,0 +1,65 @@
+# Optional CPU engine for local use. No published engine port or cloud calls.
+# docker compose -f compose.yaml -f compose.voicevox.yaml --profile voicevox up --build -d
+x-voicevox-client: &voicevox-client
+  VOICEVOX_ENABLED: '1'
+  VOICEVOX_BASE_URL: http://voicevox:50021
+  POLLY_ENABLED: '0'
+  POLLY_BILLING_APPROVED: '0'
+  TTS_USER_ACTIVE_JOBS: '1'
+  TTS_GLOBAL_ACTIVE_JOBS: '1'
+services:
+  backend:
+    environment: *voicevox-client
+    networks: [default, tts]
+    depends_on:
+      voicevox:
+        condition: service_healthy
+  narration-worker:
+    environment: *voicevox-client
+    networks: [default, tts]
+    depends_on:
+      voicevox:
+        condition: service_healthy
+  voicevox:
+    profiles: [voicevox]
+    # Official 0.25.2 CPU image, fixed to the validated linux/amd64 manifest.
+    image: voicevox/voicevox_engine:cpu-amd64-ubuntu22.04-0.25.2@sha256:abf16b7624962d140ce6c09ca8d6762cdc6e8b7e16ae5c1501bb29f59af32965
+    platform: linux/amd64
+    user: user
+    entrypoint: [/opt/voicevox_engine/run]
+    command: [--host, 0.0.0.0, --port, '50021', --cpu_num_threads, '1', --disable_mutable_api]
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    cpus: 1.0
+    mem_limit: 1800m
+    memswap_limit: 1800m
+    pids_limit: 128
+    restart: 'no'
+    stop_grace_period: 10s
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=134217728,mode=1777
+    environment:
+      HOME: /tmp
+      XDG_DATA_HOME: /tmp/voicevox-data
+      XDG_CACHE_HOME: /tmp/voicevox-cache
+      AWS_EC2_METADATA_DISABLED: 'true'
+      VV_CPU_NUM_THREADS: '1'
+      VV_DISABLE_MUTABLE_API: '1'
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+    # audio_query contains source text in its URL; never persist access logs.
+    logging:
+      driver: none
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, --max-time, '3', http://127.0.0.1:50021/version]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+      start_period: 90s
+    networks: [tts]
+networks:
+  tts:
+    internal: true
